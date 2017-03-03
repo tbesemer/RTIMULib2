@@ -46,6 +46,7 @@ RTIMUHal::~RTIMUHal()
 
 bool RTIMUHal::HALOpen()
 {
+#ifdef	ORIGINAL_RASBERRY_PI
     char buf[32];
     unsigned char SPIMode = SPI_MODE_0;
     unsigned char SPIBits = 8;
@@ -116,13 +117,27 @@ bool RTIMUHal::HALOpen()
              return false;
         }
     }
+
     return true;
+
+#else
+    if( mpu9250HalOpen() ) {
+	return false;
+    } else {
+	return true;
+    }
+#endif
+
 }
 
 void RTIMUHal::HALClose()
 {
+#ifdef	ORIGINAL_RASBERRY_PI
     I2CClose();
     SPIClose();
+#else
+    mpu9250HalClose();
+#endif
 }
 
 void RTIMUHal::I2CClose()
@@ -151,6 +166,7 @@ bool RTIMUHal::HALWrite(unsigned char slaveAddr, unsigned char regAddr,
 bool RTIMUHal::HALWrite(unsigned char slaveAddr, unsigned char regAddr,
                    unsigned char length, unsigned char const *data, const char *errorMsg)
 {
+#ifdef	ORIGINAL_RASBERRY_PI
     int result;
     unsigned char txBuff[MAX_WRITE_LEN + 1];
     char *ifType;
@@ -192,6 +208,19 @@ bool RTIMUHal::HALWrite(unsigned char slaveAddr, unsigned char regAddr,
         }
     }
     return true;
+#else
+int	err;
+
+    err = mpu9250HalWriteRegMulti( (int)regAddr, (uint8_t *)data, (int)length );
+    if( err ) {
+	printf( "HALWrite(): mpu9250HalWriteRegMulti() failed on %d Bytes\n",
+			length );
+	return false;
+    }
+
+    return true;
+
+#endif
 }
 
 bool RTIMUHal::ifWrite(unsigned char *data, unsigned char length)
@@ -213,6 +242,7 @@ bool RTIMUHal::ifWrite(unsigned char *data, unsigned char length)
 bool RTIMUHal::HALRead(unsigned char slaveAddr, unsigned char regAddr, unsigned char length,
                     unsigned char *data, const char *errorMsg)
 {
+#ifdef	ORIGINAL_RASBERRY_PI
     int tries, result, total;
     unsigned char rxBuff[MAX_READ_LEN + 1];
     struct spi_ioc_transfer rdIOC;
@@ -263,11 +293,25 @@ bool RTIMUHal::HALRead(unsigned char slaveAddr, unsigned char regAddr, unsigned 
         memcpy(data, rxBuff + 1, length);
     }
     return true;
+#else
+int	err;
+
+    err = mpu9250HalReadRegMulti( (int)regAddr, (uint8_t *)data, (int)length );
+    if( err ) {
+	printf( "HALWrite(): mpu9250HalReadRegMulti() failed on %d Bytes\n",
+			length );
+	return false;
+    }
+
+    return true;
+
+#endif
 }
 
 bool RTIMUHal::HALRead(unsigned char slaveAddr, unsigned char length,
                     unsigned char *data, const char *errorMsg)
 {
+#ifdef	ORIGINAL_RASBERRY_PI
     int tries, result, total;
     unsigned char rxBuff[MAX_READ_LEN + 1];
     struct spi_ioc_transfer rdIOC;
@@ -316,6 +360,19 @@ bool RTIMUHal::HALRead(unsigned char slaveAddr, unsigned char length,
         memcpy(data, rxBuff, length);
     }
     return true;
+#else
+int	err;
+
+    err = mpu9250HalReadMulti( (uint8_t *)data, (int)length );
+    if( err ) {
+	printf( "HALWrite(): mpu9250HalReadRegMulti() failed on %d Bytes\n",
+			length );
+	return false;
+    }
+
+    return true;
+
+#endif
 }
 
 
