@@ -25,15 +25,22 @@
 
 RTIMULIBPATH  = ../../RTIMULib
 
+DRONE_ROOT_PATH=$(shell cd ../../../../../;pwd)
+
+ifndef CC
 CC    			= gcc
 CXX   			= g++
+endif
+
 DEFINES       	=
-CFLAGS			= -pipe -O2 -Wall -W $(DEFINES)
+CFLAGS			= -pipe -O2 -Wall -W $(DEFINES) \
+			-I ${DRONE_ROOT_PATH}/app/mpu9250/hal
 CXXFLAGS      	= -pipe -O2 -Wall -W $(DEFINES)
 INCPATH       	= -I. -I$(RTIMULIBPATH)
-LINK  			= g++
+LINK  			= ${CXX}
 LFLAGS			= -Wl,-O1
-LIBS  			= -L/usr/lib/arm-linux-gnueabihf
+LIBS  			= -L/usr/lib/arm-linux-gnueabihf \
+			${DRONE_ROOT_PATH}/lib/libmpu9250_hal.a
 COPY  			= cp -f
 COPY_FILE     	= $(COPY)
 COPY_DIR      	= $(COPY) -r
