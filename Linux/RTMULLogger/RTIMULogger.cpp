@@ -45,8 +45,7 @@ void doAccelCal();
 void newIMU();
 bool pollIMU();
 char getUserChar();
-void displayMenu();
-void displayMagMinMax();
+void logMagMinMax( int fd, uint64_t now );
 void displayMagEllipsoid();
 void displayAccelMinMax();
 
@@ -70,7 +69,7 @@ int main(int argc, char **argv)
     else
         settingsFile = (char *)"RTIMULib";
 
-    printf("RTIMULibCal - using %s.ini\n", settingsFile);
+    printf("RTIMULogger - using %s.ini\n", settingsFile);
 
     settings = new RTIMUSettings(settingsFile);
 
@@ -96,30 +95,8 @@ int main(int argc, char **argv)
     ctty.c_lflag &= ~(ICANON);
     tcsetattr(fileno(stdout), TCSANOW, &ctty);
 
-    //  the main loop
+    doMagMinMaxCal();
 
-    while (!mustExit) {
-        displayMenu();
-        switch (tolower(getchar())) {
-        case 'x' :
-            mustExit = true;
-            break;
-
-        case 'm' :
-            doMagMinMaxCal();
-            break;
-
-        case 'e' :
-            doMagEllipsoidCal();
-            break;
-
-        case 'a' :
-            doAccelCal();
-            break;
-        }
-    }
-
-    printf("\nRTIMULibCal exiting\n");
     return 0;
 }
 
@@ -149,17 +126,6 @@ void doMagMinMaxCal()
     magCal->magCalInit();
     magMinMaxDone = false;
 
-    //  now collect data
-
-    printf("\n\nMagnetometer min/max calibration\n");
-    printf("--------------------------------\n");
-    printf("Waggle the IMU chip around, ensuring that all six axes\n");
-    printf("(+x, -x, +y, -y and +z, -z) go through their extrema.\n");
-    printf("When all extrema have been achieved, enter 's' to save, 'r' to reset\n");
-    printf("or 'x' to abort and discard the data.\n");
-    printf("\nPress any key to start...");
-    getchar();
-
     displayTimer = RTMath::currentUSecsSinceEpoch();
 
     while (1) {
@@ -171,10 +137,10 @@ void doMagMinMaxCal()
             magCal->newMinMaxData(imuData.compass);
             now = RTMath::currentUSecsSinceEpoch();
 
-            //  display 10 times per second
+            //  log 10 times per second
 
             if ((now - displayTimer) > 100000) {
-                displayMagMinMax();
+                logMagMinMax( uint64_t now );
                 displayTimer = now;
             }
         }
@@ -403,16 +369,6 @@ char getUserChar()
     return tolower(getchar());
 }
 
-void displayMenu()
-{
-    printf("\n");
-    printf("Options are: \n\n");
-    printf("  m - calibrate magnetometer with min/max\n");
-    printf("  e - calibrate magnetometer with ellipsoid (do min/max first)\n");
-    printf("  a - calibrate accelerometers\n");
-    printf("  x - exit\n\n");
-    printf("Enter option: ");
-}
 
 void displayMagMinMax()
 {
