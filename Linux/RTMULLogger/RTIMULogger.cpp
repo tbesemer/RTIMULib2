@@ -45,7 +45,7 @@ void doAccelCal();
 void newIMU();
 bool pollIMU();
 char getUserChar();
-void logMagMinMax( int fd, uint64_t now );
+void logMagMinMax( RTVector3& data );
 void displayMagEllipsoid();
 void displayAccelMinMax();
 
@@ -140,29 +140,11 @@ void doMagMinMaxCal()
             //  log 10 times per second
 
             if ((now - displayTimer) > 100000) {
-                logMagMinMax( uint64_t now );
+                logMagMinMax( imuData.compass );
                 displayTimer = now;
             }
         }
 
-        if ((input = getUserChar()) != 0) {
-            switch (input) {
-            case 's' :
-                printf("\nSaving min/max data.\n\n");
-                magCal->magCalSaveMinMax();
-                magMinMaxDone = true;
-                return;
-
-            case 'x' :
-                printf("\nAborting.\n");
-                return;
-
-            case 'r' :
-                printf("\nResetting min/max data.\n");
-                magCal->magCalReset();
-                break;
-            }
-        }
     }
 }
 
@@ -378,6 +360,20 @@ void displayMagMinMax()
     printf("Max x: %6.2f  max y: %6.2f  max z: %6.2f\n", magCal->m_magMax.data(0),
            magCal->m_magMax.data(1), magCal->m_magMax.data(2));
     fflush(stdout);
+}
+
+void logMagMinMax( RTVector3& data )
+{
+int i;
+
+    printf( "logMagMinMax(): imuData.timestamp = %lld\n", imuData.timestamp );
+    printf( "logMagMinMax(): data.data(0-2): " );
+
+    for( i = 0; i < 3; i++ ) {
+        printf( "%f ", data.data(i) );
+    }
+    printf( "\n" );
+
 }
 
 void displayMagEllipsoid()
