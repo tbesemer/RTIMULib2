@@ -32,6 +32,13 @@
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 
+#define _POSIX_C_SOURCE 200809L
+#include <inttypes.h>
+#include <math.h>
+#include <time.h>
+#include <string.h>
+#include <signal.h>
+
 //  where to find the ellipsoid fitting code
 
 #define ELLIPSOID_FIT_DIR               "../RTEllipsoidFit/"
@@ -60,9 +67,49 @@ static bool magMinMaxDone;
 static bool accelEnables[3];
 static int accelCurrentAxis;
 
+static void getTimeStamp( char *timeStampBuff )
+{
+struct  tm *tmPtr;
+struct  timespec spec;
+time_t  curTime;
+int     ms;
+
+    curTime = time( &curTime );
+    tmPtr = localtime( &curTime );
+    clock_gettime(CLOCK_REALTIME, &spec);
+    ms = round( spec.tv_nsec/ 1.0e5 );
+
+    sprintf( timeStampBuff, "%04d-%02d-%02d_%02d-%02d-%02d.%04d",
+        (tmPtr->tm_year - 100 + 2000), (tmPtr->tm_mon + 1), tmPtr->tm_mday,
+        tmPtr->tm_hour, tmPtr->tm_min, tmPtr->tm_sec, ms );
+
+}
+
+static FILE *magLogFp;
+
+static void  loggerSignalHandler( int arg )
+{
+    fclose( magLogFp );
+    exit( 0 );
+}
+
+
 int main(int argc, char **argv)
 {
     char *settingsFile;
+    char imuFileLogNameBase[ 255 ];
+    char imuMagFileLogName[ 255 ];
+
+    signal( SIGINT, loggerSignalHandler );
+
+    getTimeStamp( imuFileLogNameBase );
+    sprintf( imuMagFileLogName,
+	"/home/root/target/logging/imu/imu_mag-%s.txt", imuFileLogNameBase );
+    magLogFp = fopen( imuMagFileLogName, "w" );
+    if( !magLogFp ) {
+	fprintf( stderr, "imuLogger: Can't open %s\n", imuMagFileLogName );
+    }
+
 
     if (argc == 2)
         settingsFile = argv[1];
@@ -76,6 +123,7 @@ int main(int argc, char **argv)
     bool mustExit = false;
     imu = NULL;
     newIMU();
+
 
     //  set up for calibration run
 
@@ -364,6 +412,7 @@ void displayMagMinMax()
 
 void logMagMinMax( RTVector3& data )
 {
+#ifdef	CONSOLE_PRINT_DEBUG
 int i;
 
     printf( "logMagMinMax(): imuData.timestamp = %lld\n", imuData.timestamp );
@@ -373,6 +422,9 @@ int i;
         printf( "%f ", data.data(i) );
     }
     printf( "\n" );
+#endif
+
+    fprintf( magLogFp, "%lld %f %f %f\n", imuData.timestamp, data.data(0), data.data(1), data.data(2) );
 
 }
 
