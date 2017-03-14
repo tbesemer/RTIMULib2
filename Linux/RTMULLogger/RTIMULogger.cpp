@@ -53,6 +53,7 @@ void newIMU();
 bool pollIMU();
 char getUserChar();
 void logMagMinMax( RTVector3& data );
+void logAccelData( RTVector3& data );
 void displayMagEllipsoid();
 void displayAccelMinMax();
 
@@ -86,10 +87,12 @@ int     ms;
 }
 
 static FILE *magLogFp;
+static FILE *accelLogFp;
 
 static void  loggerSignalHandler( int arg )
 {
     fclose( magLogFp );
+    fclose( accelLogFp );
     exit( 0 );
 }
 
@@ -99,6 +102,7 @@ int main(int argc, char **argv)
     char *settingsFile;
     char imuFileLogNameBase[ 255 ];
     char imuMagFileLogName[ 255 ];
+    char imuAccelFileLogName[ 255 ];
 
     signal( SIGINT, loggerSignalHandler );
 
@@ -110,6 +114,12 @@ int main(int argc, char **argv)
 	fprintf( stderr, "imuLogger: Can't open %s\n", imuMagFileLogName );
     }
 
+    sprintf( imuAccelFileLogName,
+	"/home/root/target/logging/imu/imu_accel-%s.txt", imuFileLogNameBase );
+    accelLogFp = fopen( imuAccelFileLogName, "w" );
+    if( !accelLogFp ) {
+	fprintf( stderr, "imuLogger: Can't open %s\n", imuMagFileLogName );
+    }
 
     if (argc == 2)
         settingsFile = argv[1];
@@ -170,9 +180,17 @@ void doMagMinMaxCal()
     uint64_t displayTimer;
     uint64_t now;
     char input;
+    int  i;
 
     magCal->magCalInit();
     magMinMaxDone = false;
+
+    //  perform all axis reset
+
+    for (int i = 0; i < 3; i++) {
+        accelCal->accelCalEnable(i, true);
+    }
+    accelCal->accelCalReset();
 
     displayTimer = RTMath::currentUSecsSinceEpoch();
 
@@ -185,10 +203,13 @@ void doMagMinMaxCal()
             magCal->newMinMaxData(imuData.compass);
             now = RTMath::currentUSecsSinceEpoch();
 
+	    accelCal->newAccelCalData(imuData.accel);
+
             //  log 10 times per second
 
             if ((now - displayTimer) > 100000) {
                 logMagMinMax( imuData.compass );
+                logAccelData( imuData.accel );
                 displayTimer = now;
             }
         }
@@ -425,6 +446,23 @@ int i;
 #endif
 
     fprintf( magLogFp, "%lld %f %f %f\n", imuData.timestamp, data.data(0), data.data(1), data.data(2) );
+
+}
+
+void logAccelData( RTVector3& data )
+{
+#ifdef	CONSOLE_PRINT_DEBUG
+int i;
+
+    printf( "logAccelData(): imuData.timestamp = %lld\n", imuData.timestamp );
+    printf( "logAccelData(): data.data(0-2): " );
+
+    for( i = 0; i < 3; i++ ) {
+        printf( "%f ", data.data(i) );
+    }
+    printf( "\n" );
+#endif
+    fprintf( accelLogFp, "%lld %f %f %f\n", imuData.timestamp, data.data(0), data.data(1), data.data(2) );
 
 }
 
