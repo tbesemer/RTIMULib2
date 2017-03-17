@@ -51,8 +51,14 @@ const char *RTMath::displayRadians(const char *label, RTVector3& vec)
 
 const char *RTMath::displayDegrees(const char *label, RTVector3& vec)
 {
+#ifdef	ORIGINAL_PRE_TBESEMER
     sprintf(m_string, "%s: roll:%f, pitch:%f, yaw:%f", label, vec.x() * RTMATH_RAD_TO_DEGREE,
             vec.y() * RTMATH_RAD_TO_DEGREE, vec.z() * RTMATH_RAD_TO_DEGREE);
+#else
+    sprintf(m_string, "%f %f %f", vec.x() * RTMATH_RAD_TO_DEGREE,
+            vec.y() * RTMATH_RAD_TO_DEGREE, vec.z() * RTMATH_RAD_TO_DEGREE);
+
+#endif
     return m_string;
 }
 
