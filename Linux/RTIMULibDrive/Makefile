@@ -41,7 +41,7 @@ LINK  			= ${CXX}
 LFLAGS			= -Wl,-O1
 LIBS  			= -L/usr/lib/arm-linux-gnueabihf \
                         ${DRONE_ROOT_PATH}/lib/libmpu9250_hal.a \
-                        ${DRONE_ROOT_PATH}/lib/librpSpiHal.a
+                        ${DRONE_ROOT_PATH}/lib/librpSpiHal.a -lpthread
 COPY  			= cp -f
 COPY_FILE     	= $(COPY)
 COPY_DIR      	= $(COPY) -r
