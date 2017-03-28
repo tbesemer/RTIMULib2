@@ -51,6 +51,9 @@ public:
 
     static const char *displayRadians(const char *label, RTVector3& vec);
     static const char *displayDegrees(const char *label, RTVector3& vec);
+    static const char *displayAccel(const char *label, RTVector3& vec);
+    static const char *displayGyro(const char *label, RTVector3& vec);
+    static const char *displayCompass(const char *label, RTVector3& vec);
     static const char *display(const char *label, RTQuaternion& quat);
     static const char *display(const char *label, RTMatrix4x4& mat);
 

@@ -51,14 +51,26 @@ const char *RTMath::displayRadians(const char *label, RTVector3& vec)
 
 const char *RTMath::displayDegrees(const char *label, RTVector3& vec)
 {
-#ifdef	ORIGINAL_PRE_TBESEMER
-    sprintf(m_string, "%s: roll:%f, pitch:%f, yaw:%f", label, vec.x() * RTMATH_RAD_TO_DEGREE,
+    sprintf(m_string, "%f,%f,%f,", vec.x() * RTMATH_RAD_TO_DEGREE,
             vec.y() * RTMATH_RAD_TO_DEGREE, vec.z() * RTMATH_RAD_TO_DEGREE);
-#else
-    sprintf(m_string, "%f %f %f", vec.x() * RTMATH_RAD_TO_DEGREE,
-            vec.y() * RTMATH_RAD_TO_DEGREE, vec.z() * RTMATH_RAD_TO_DEGREE);
+    return m_string;
+}
 
-#endif
+const char *RTMath::displayAccel(const char *label, RTVector3& vec)
+{
+    sprintf(m_string, "%f,%f,%f,", vec.x(), vec.y(), vec.z());
+    return m_string;
+}
+
+const char *RTMath::displayGyro(const char *label, RTVector3& vec)
+{
+    sprintf(m_string, "%f,%f,%f,", vec.x(), vec.y(), vec.z());
+    return m_string;
+}
+
+const char *RTMath::displayCompass(const char *label, RTVector3& vec)
+{
+    sprintf(m_string, "%f,%f,%f", vec.x(), vec.y(), vec.z());
     return m_string;
 }
 

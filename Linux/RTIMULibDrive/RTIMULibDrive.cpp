@@ -31,6 +31,7 @@
 #include <signal.h>
 
 #include <sys_config.h>
+#include <sys_util.h>
 
 static  RTIMU *imu;
 static  RTIMU_DATA imuData;
@@ -42,16 +43,35 @@ static int verboseFlag = 0;
 
 static void *monPmdCamera( void *arg )
 {
+char timeStampBuff[ 200 ];
+char fnameBuff[ 400 ];
+FILE *fp;
+
     if( verboseFlag ) {
         fprintf( stdout, "monPmdCamera(): Running\n" );
     }
 
     for( ;; ) {
 	sem_wait( monPmdSemId );
+ 	getTimeStamp( timeStampBuff );
+	sprintf( fnameBuff, "/home/root/target/logging/imu/imu-%s.txt", timeStampBuff );
+
+   	fp = fopen( fnameBuff, "w" );
+	if( fp ) {
+            fprintf( fp, "%s",  RTMath::displayDegrees("", imuData.fusionPose) );
+            fprintf( fp, "%s",  RTMath::displayAccel("", imuData.accel) );
+            fprintf( fp, "%s",  RTMath::displayGyro("", imuData.gyro) );
+            fprintf( fp, "%s\n",  RTMath::displayCompass("", imuData.compass) );
+	    fclose( fp );
+	}
 
 	if( verboseFlag ) {
             fprintf( stdout, "monPmdCamera(): Triggered\n" );
+	    fprintf( stdout, "%s\n", timeStampBuff );
             fprintf( stdout, "%s\n",  RTMath::displayDegrees("", imuData.fusionPose) );
+            fprintf( stdout, "%s\n",  RTMath::displayAccel("", imuData.accel) );
+            fprintf( stdout, "%s\n",  RTMath::displayGyro("", imuData.gyro) );
+            fprintf( stdout, "%s\n",  RTMath::displayCompass("", imuData.compass) );
             fflush(stdout);
 	}
     }
@@ -88,7 +108,7 @@ void imuSigHandler( int arg )
 }
 
 
-int main( char argc, char *argv[] )
+int main( int argc, char *argv[] )
 {
     int sampleCount = 0;
     int sampleRate = 0;
