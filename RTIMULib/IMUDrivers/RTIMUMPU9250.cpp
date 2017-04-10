@@ -225,10 +225,12 @@ bool RTIMUMPU9250::IMUInit()
     if (!m_settings->HALRead(m_slaveAddr, MPU9250_WHO_AM_I, 1, &result, "Failed to read MPU9250 id"))
         return false;
 
+#ifdef	ORIGINAL_PRE_TBESEMER
     if (result != MPU9250_ID) {
         HAL_ERROR2("Incorrect %s id %d\n", IMUName(), result);
         return false;
     }
+#endif
 
     //  now configure the various components
 
